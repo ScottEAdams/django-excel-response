@@ -48,16 +48,19 @@ class ExcelResponse(HttpResponse):
 
             for rowx, row in enumerate(data):
                 for colx, value in enumerate(row):
+                    cell_style = styles['default']
+
                     if isinstance(value, datetime.datetime):
                         cell_style = styles['datetime']
                     elif isinstance(value, datetime.date):
                         cell_style = styles['date']
                     elif isinstance(value, datetime.time):
                         cell_style = styles['time']
+                    elif isinstance(value, int) or isinstance(value, float):
+                        cell_style = styles['default']
                     elif (re.compile("^[0-9]+([,][0-9]+)?$")).match(u"{}".format(value)):
                         value = float(value.replace(',', '.'))
-                    else:
-                        cell_style = styles['default']
+
                     sheet.write(rowx, colx, value, style=cell_style)
             book.save(output)
             mimetype = 'application/vnd.ms-excel'
@@ -76,6 +79,6 @@ class ExcelResponse(HttpResponse):
             file_ext = 'csv'
         output.seek(0)
         super(ExcelResponse, self).__init__(content=output.getvalue(),
-                                            mimetype=mimetype)
+                                            content_type=mimetype)
         self['Content-Disposition'] = 'attachment;filename="%s.%s"' % \
                                       (output_name.replace('"', '\"'), file_ext)
